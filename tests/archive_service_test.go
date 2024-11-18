@@ -4,6 +4,7 @@ import (
 	"doodocs-backend/internal/service"
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"mime/multipart"
 	"os"
 	"testing"
 )
@@ -22,4 +23,19 @@ func TestAnalyzeArchive(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "sample.zip", details.Filename)
 	assert.Equal(t, float64(7), details.TotalFiles)
+}
+
+func TestCreateArchive(t *testing.T) {
+	archiveService := service.NewArchiveService()
+
+	multipartFile := &multipart.FileHeader{
+		Filename: "testfile.txt",
+		Header:   map[string][]string{"Content-Type": {"text/plain"}},
+	}
+
+	files := []*multipart.FileHeader{multipartFile}
+
+	archive, err := archiveService.CreateArchive(files)
+	assert.Error(t, err) // fails because of missing actual files
+	assert.Nil(t, archive)
 }
