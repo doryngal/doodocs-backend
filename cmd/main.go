@@ -16,8 +16,10 @@ func main() {
 	}
 
 	archiveService := service.NewArchiveService()
+	mailService := service.NewMailService(cfg)
 
 	archiveController := controller.NewArchiveController(archiveService)
+	mailController := controller.NewMailController(mailService)
 
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
@@ -28,7 +30,11 @@ func main() {
 		archive := api.Group("/archive")
 		{
 			archive.POST("/information", archiveController.GetArchiveInformation) // Route 1
-			archive.POST("/files", archiveController.CreateArchive)               //Route 2
+			archive.POST("/files", archiveController.CreateArchive)               // Route 2
+		}
+		mail := api.Group("/mail")
+		{
+			mail.POST("/send", mailController.SendMail) // Route 3
 		}
 	}
 
