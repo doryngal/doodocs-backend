@@ -14,6 +14,7 @@ func NewArchiveController(service *service.ArchiveService) *ArchiveController {
 	return &ArchiveController{archiveService: service}
 }
 
+// GetArchiveInformation
 // @Summary Get archive information
 // @Description Accepts an archive file and returns detailed information about its structure
 // @Accept  multipart/form-data
@@ -38,6 +39,7 @@ func (ac *ArchiveController) GetArchiveInformation(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+// CreateArchive
 // @Summary Create an archive
 // @Description Accepts multiple files and returns a ZIP archive containing them
 // @Accept  multipart/form-data

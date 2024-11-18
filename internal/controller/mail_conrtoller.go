@@ -15,6 +15,7 @@ func NewMailController(mailService *service.MailService) *MailController {
 	return &MailController{mailService: mailService}
 }
 
+// SendMail
 // @Summary Send a file via email
 // @Description Sends a file to the provided list of email addresses
 // @Accept  multipart/form-data
