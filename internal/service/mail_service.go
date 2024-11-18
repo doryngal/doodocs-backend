@@ -6,7 +6,9 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"io"
 	"log"
+	"mime/multipart"
 	"net/smtp"
 	"strings"
 	"time"
@@ -18,6 +20,23 @@ type MailService struct {
 
 func NewMailService(cfg *config.Config) *MailService {
 	return &MailService{cfg: cfg}
+}
+
+func (ms *MailService) ProcessSendMail(file multipart.File, fileName string, emails []string, mimeType string) error {
+	if len(emails) == 0 {
+		return errors.New("email list cannot be empty")
+	}
+
+	if !isValidMimeTypeForEmail(mimeType) {
+		return errors.New("invalid file type")
+	}
+
+	fileData, err := io.ReadAll(file)
+	if err != nil {
+		return fmt.Errorf("failed to read file: %w", err)
+	}
+
+	return ms.SendMailToEmails(fileData, fileName, emails)
 }
 
 func (ms *MailService) SendMailToEmails(fileData []byte, fileName string, emails []string) error {
@@ -71,4 +90,12 @@ func (ms *MailService) createEmailMessage(fileName string, emails []string, file
 	msg.WriteString("--boundary--")
 
 	return msg.String()
+}
+
+func isValidMimeTypeForEmail(mimeType string) bool {
+	validMimeTypes := map[string]bool{
+		"application/vnd.openxmlformats-officedocument.wordprocessingml.document": true,
+		"application/pdf": true,
+	}
+	return validMimeTypes[mimeType]
 }

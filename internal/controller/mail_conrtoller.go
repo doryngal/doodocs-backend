@@ -23,37 +23,14 @@ func (mc *MailController) SendMail(ctx *gin.Context) {
 	}
 	defer file.Close()
 
-	mineType := header.Header.Get("Content-Type")
-	if !isValidMimeTypeForEmail(mineType) {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid file type"})
-		return
-	}
-
 	emails := ctx.PostForm("emails")
-	if emails == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "email list is required"})
-		return
-	}
 	emailList := strings.Split(emails, ",")
 
-	fileData := make([]byte, header.Size)
-	if _, err := file.Read(fileData); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "failed to read file"})
-		return
-	}
-
-	err = mc.mailService.SendMailToEmails(fileData, header.Filename, emailList)
+	err = mc.mailService.ProcessSendMail(file, header.Filename, emailList, header.Header.Get("Content-Type"))
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-}
-
-func isValidMimeTypeForEmail(mimeType string) bool {
-	validMimeTypes := map[string]bool{
-		"application/vnd.openxmlformats-officedocument.wordprocessingml.document": true,
-		"application/pdf": true,
-	}
-	return validMimeTypes[mimeType]
+	ctx.JSON(http.StatusOK, gin.H{"message": "email sent successfully"})
 }
