@@ -14,6 +14,14 @@ func NewArchiveController(service *service.ArchiveService) *ArchiveController {
 	return &ArchiveController{archiveService: service}
 }
 
+// @Summary Get archive information
+// @Description Accepts an archive file and returns detailed information about its structure
+// @Accept  multipart/form-data
+// @Produce  json
+// @Param   file formData file true "The archive file to be analyzed"
+// @Success 200 {object} model.ArchiveDetails
+// @Failure 400 {object} string
+// @Router /archive/information [post]
 func (ac *ArchiveController) GetArchiveInformation(c *gin.Context) {
 	file, header, err := c.Request.FormFile("file")
 	if err != nil {
@@ -30,6 +38,14 @@ func (ac *ArchiveController) GetArchiveInformation(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+// @Summary Create an archive
+// @Description Accepts multiple files and returns a ZIP archive containing them
+// @Accept  multipart/form-data
+// @Produce  application/zip
+// @Param   files[] formData file true "Files to be archived"
+// @Success 200 {file} application/zip
+// @Failure 400 {object} string
+// @Router /archive/files [post]
 func (ac *ArchiveController) CreateArchive(c *gin.Context) {
 	form, err := c.MultipartForm()
 	if err != nil {

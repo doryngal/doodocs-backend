@@ -15,6 +15,15 @@ func NewMailController(mailService *service.MailService) *MailController {
 	return &MailController{mailService: mailService}
 }
 
+// @Summary Send a file via email
+// @Description Sends a file to the provided list of email addresses
+// @Accept  multipart/form-data
+// @Produce  json
+// @Param   file formData file true "File to be sent via email"
+// @Param   emails formData string true "Comma-separated list of email addresses"
+// @Success 200 {object} string
+// @Failure 400 {object} string
+// @Router /mail/file [post]
 func (mc *MailController) SendMail(ctx *gin.Context) {
 	file, header, err := ctx.Request.FormFile("file")
 	if err != nil {

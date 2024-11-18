@@ -5,10 +5,24 @@ import (
 	"doodocs-backend/internal/controller"
 	"doodocs-backend/internal/middleware"
 	"doodocs-backend/internal/service"
-	"github.com/gin-gonic/gin"
 	"log"
+
+	_ "doodocs-backend/internal/docs"
+	"github.com/gin-gonic/gin"
+	files "github.com/swaggo/files"
+	"github.com/swaggo/gin-swagger"
 )
 
+// @title Doodocs Backend API
+// @version 1.0
+// @description This is a REST API for handling archives and sending emails.
+// @termsOfService http://swagger.io/terms/
+// @contact.name API Support
+// @contact.email support@example.com
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+// @host localhost:8080
+// @BasePath /api
 func main() {
 	cfg, err := config.LoadConfig(".env")
 	if err != nil {
@@ -25,6 +39,8 @@ func main() {
 	r := gin.New()
 	r.Use(middleware.RequestLogger())
 
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(files.Handler))
+
 	api := r.Group("/api")
 	{
 		archive := api.Group("/archive")
@@ -34,7 +50,7 @@ func main() {
 		}
 		mail := api.Group("/mail")
 		{
-			mail.POST("/send", mailController.SendMail) // Route 3
+			mail.POST("/file", mailController.SendMail) // Route 3
 		}
 	}
 

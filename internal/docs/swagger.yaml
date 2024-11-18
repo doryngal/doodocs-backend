@@ -1,0 +1,115 @@
+basePath: /api
+definitions:
+  model.ArchiveDetails:
+    properties:
+      archive_size:
+        type: number
+      filename:
+        type: string
+      files:
+        items:
+          $ref: '#/definitions/model.FileDetails'
+        type: array
+      total_files:
+        type: number
+      total_size:
+        type: number
+    type: object
+  model.FileDetails:
+    properties:
+      file_path:
+        type: string
+      mimetype:
+        type: string
+      size:
+        type: number
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@example.com
+    name: API Support
+  description: This is a REST API for handling archives and sending emails.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Doodocs Backend API
+  version: "1.0"
+paths:
+  /archive/files:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Accepts multiple files and returns a ZIP archive containing them
+      parameters:
+      - description: Files to be archived
+        in: formData
+        name: files[]
+        required: true
+        type: file
+      produces:
+      - application/zip
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+      summary: Create an archive
+  /archive/information:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Accepts an archive file and returns detailed information about
+        its structure
+      parameters:
+      - description: The archive file to be analyzed
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.ArchiveDetails'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+      summary: Get archive information
+  /mail/file:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Sends a file to the provided list of email addresses
+      parameters:
+      - description: File to be sent via email
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: Comma-separated list of email addresses
+        in: formData
+        name: emails
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+      summary: Send a file via email
+swagger: "2.0"
