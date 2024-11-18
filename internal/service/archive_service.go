@@ -16,12 +16,9 @@ func NewArchiveService() *ArchiveService {
 }
 
 func (s *ArchiveService) AnalyzeArchive(file multipart.File, fileName string) (*model.ArchiveDetails, error) {
-	buffer := bytes.NewBuffer(nil)
-	if _, err := io.Copy(buffer, file); err != nil {
-		return nil, err
-	}
+	fileSize := calculateFileSize(file)
 
-	reader, err := zip.NewReader(bytes.NewReader(buffer.Bytes()), int64(buffer.Len()))
+	zipReader, err := zip.NewReader(file, fileSize)
 	if err != nil {
 		return nil, errors.New("file is not a valid archive")
 	}
@@ -29,7 +26,7 @@ func (s *ArchiveService) AnalyzeArchive(file multipart.File, fileName string) (*
 	var totalSize int64
 	files := make([]model.FileDetails, 0)
 
-	for _, f := range reader.File {
+	for _, f := range zipReader.File {
 		totalSize += int64(f.UncompressedSize64)
 		files = append(files, model.FileDetails{
 			FilePath: f.Name,
@@ -40,7 +37,7 @@ func (s *ArchiveService) AnalyzeArchive(file multipart.File, fileName string) (*
 
 	return &model.ArchiveDetails{
 		Filename:    fileName,
-		ArchiveSize: float64(buffer.Len()),
+		ArchiveSize: float64(fileSize),
 		TotalSize:   float64(totalSize),
 		TotalFiles:  float64(len(files)),
 		Files:       files,
@@ -89,10 +86,24 @@ func isValidMimeType(mimeType string) bool {
 	return validMimeTypes[mimeType]
 }
 
+func calculateFileSize(file multipart.File) int64 {
+	if seeker, ok := file.(io.Seeker); ok {
+		size, _ := seeker.Seek(0, io.SeekEnd)
+		seeker.Seek(0, io.SeekStart)
+		return size
+	}
+	return 0
+}
+
 func detectMimeType(filename string) string {
 	if len(filename) >= 4 && filename[len(filename)-4:] == ".jpg" {
 		return "image/jpeg"
 	}
-
+	if len(filename) >= 5 && filename[len(filename)-5:] == ".docx" {
+		return "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+	}
+	if len(filename) >= 4 && filename[len(filename)-4:] == ".pdf" {
+		return "application/pdf"
+	}
 	return "unknown"
 }
