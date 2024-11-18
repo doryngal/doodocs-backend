@@ -28,6 +28,7 @@ func main() {
 		archive := api.Group("/archive")
 		{
 			archive.POST("/information", archiveController.GetArchiveInformation) // Route 1
+			archive.POST("/files", archiveController.CreateArchive)               //Route 2
 		}
 	}
 

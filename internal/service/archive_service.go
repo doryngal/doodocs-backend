@@ -47,6 +47,48 @@ func (s *ArchiveService) AnalyzeArchive(file multipart.File, fileName string) (*
 	}, nil
 }
 
+func (s *ArchiveService) CreateArchive(files []*multipart.FileHeader) ([]byte, error) {
+	var buffer bytes.Buffer
+	zipWriter := zip.NewWriter(&buffer)
+
+	for _, fileHeader := range files {
+		if !isValidMimeType(fileHeader.Header.Get("Content-Type")) {
+			return nil, errors.New("invalid file type detected")
+		}
+
+		file, err := fileHeader.Open()
+		if err != nil {
+			return nil, errors.New("failed to open file for archiving")
+		}
+		defer file.Close()
+
+		zipFile, err := zipWriter.Create(fileHeader.Filename)
+		if err != nil {
+			return nil, errors.New("failed to create zip file entry")
+		}
+
+		if _, err := zipFile.Write(buffer.Bytes()); err != nil {
+			return nil, errors.New("failed to write file to archive")
+		}
+	}
+
+	if err := zipWriter.Close(); err != nil {
+		return nil, errors.New("failed to close zip writer")
+	}
+
+	return buffer.Bytes(), nil
+}
+
+func isValidMimeType(mimeType string) bool {
+	validMimeTypes := map[string]bool{
+		"application/vnd.openxmlformats-officedocument.wordprocessingml.document": true,
+		"application/xml": true,
+		"image/jpeg":      true,
+		"image/png":       true,
+	}
+	return validMimeTypes[mimeType]
+}
+
 func detectMimeType(filename string) string {
 	if len(filename) >= 4 && filename[len(filename)-4:] == ".jpg" {
 		return "image/jpeg"
