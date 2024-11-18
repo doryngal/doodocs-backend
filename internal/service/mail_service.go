@@ -6,8 +6,10 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"log"
 	"net/smtp"
 	"strings"
+	"time"
 )
 
 type MailService struct {
@@ -27,12 +29,15 @@ func (ms *MailService) SendMailToEmails(fileData []byte, fileName string, emails
 
 	message := ms.createEmailMessage(fileName, emails, fileData)
 
-	err := smtp.SendMail(fmt.Sprintf("%s:%s", ms.cfg.SMTPHost, ms.cfg.SMTPPort), auth, ms.cfg.SMTPUser, emails, []byte(message))
-	if err != nil {
-		return fmt.Errorf("failed to send email: %w", err)
+	for i := 0; i < 3; i++ {
+		err := smtp.SendMail(fmt.Sprintf("%s:%s", ms.cfg.SMTPHost, ms.cfg.SMTPPort), auth, ms.cfg.SMTPUser, emails, []byte(message))
+		if err == nil {
+			return nil
+		}
+		log.Printf("Attempt %d failed: %v", i+1, err)
+		time.Sleep(time.Duration(i+1) * time.Second)
 	}
-
-	return nil
+	return fmt.Errorf("failed to send email after 3 attempts")
 }
 
 func (ms *MailService) createEmailMessage(fileName string, emails []string, fileData []byte) string {
